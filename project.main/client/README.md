@@ -1,3 +1,5 @@
+
+
 <div align="center">
 
 # 🧠 Document-Retrieval
@@ -61,20 +63,14 @@ The chatbot behaves less like a search engine and more like a research assistant
 
 ---
 
-# 🎥 Demo
-
-> **Replace these with your own assets**
-
-<div align="center">
+# 🎥 Video
 
 ### How the Loop Works
 
-<img src="C:\Users\Riya Vairale\Documents\GitHub\Doc_ret.mp4" width="900"/>
-
----
 
 
-</div>
+https://github.com/user-attachments/assets/0b63cb19-dcd1-49ff-9019-daeeb4a191fb
+
 
 ---
 
