@@ -1,210 +1,312 @@
 <div align="center">
 
-# 🎯 Document-Retrieval
+# 🧠 Document-Retrieval
 
-### An agentic RAG chatbot that fetches its own missing knowledge
+### An Agentic RAG System That Fetches Its Own Missing Knowledge
 
-Most RAG apps search what they already have. This one decides when it *doesn't* have enough — and goes and gets it, live, from YouTube.
+Instead of failing when information is missing, this system decides **how to acquire it**. It searches existing knowledge, discovers similar content, or scrapes and indexes new YouTube transcripts before answering.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![pgvector](https://img.shields.io/badge/pgvector-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+**The goal isn't just retrieval—it's acquisition.**
 
-[View Demo](#-demo) · [Report Bug](../../issues) · [Request Feature](../../issues)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge)
+![LangChain](https://img.shields.io/badge/LangChain-00A67E?style=for-the-badge)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![pgvector](https://img.shields.io/badge/pgvector-336791?style=for-the-badge)
 
 </div>
 
 ---
 
-## 💡 The Idea
+# 💡 Why This Project?
 
-Ask a typical chatbot about a video it has never seen, and it either hallucinates an answer or tells you it can't help. **Document-Retrieval does neither.**
+Traditional Retrieval-Augmented Generation (RAG) systems work well only when the required documents already exist inside the vector database.
 
-It's an agent that reasons about *what kind of gap* it's facing and picks the right move:
+But what happens when the answer isn't there?
 
-- **"I know exactly which video."** → search that video's transcript.
-- **"I know the topic, not the source."** → search semantically across every indexed video.
-- **"Nobody has indexed this yet."** → scrape the transcript, embed it, and answer once it's ready.
+Most systems either:
 
-The result is a chatbot that behaves less like a lookup table and more like a research assistant — one that can go build its own evidence base mid-conversation.
+- Hallucinate
+- Return "No relevant documents found"
 
-## 🖼️ Demo
+This project explores a different approach.
+
+Instead of treating missing context as failure, the agent treats it as **another problem to solve.**
+
+If knowledge doesn't exist yet, it automatically:
+
+- finds the appropriate source
+- retrieves the transcript
+- chunks and embeds it
+- stores it inside the vector database
+- continues answering the user
+
+The chatbot behaves less like a search engine and more like a research assistant capable of expanding its own knowledge base.
+
+---
+
+# ✨ Features
+
+- 🤖 Agentic Retrieval using LangGraph
+- 🔍 Semantic Search with pgvector
+- 📺 Automatic YouTube Transcript Retrieval
+- 🌐 BrightData Scraping Integration
+- ⚡ Async Webhook Pipeline
+- 🧠 Retrieval-Augmented Generation (RAG)
+- 📚 Dynamic Knowledge Acquisition
+- 🔄 Stateful Agent Memory
+- 🚀 Vector Similarity Search
+- 💬 Conversational Research Workflow
+
+---
+
+# 🎥 Demo
+
+> **Replace these with your own assets**
 
 <div align="center">
-<!-- Replace with an actual screen recording or screenshot of the chat UI -->
-<img src="./client/public/demo-screenshot.png" alt="Document-Retrieval chat interface" width="800"/>
-<br/>
-<sub>💬 Ask a question → 🔍 agent picks a tool → 🌐 scrapes if needed → ✅ answers with sources</sub>
+
+### How the Loop Works
+
+<img src="C:\Users\Riya Vairale\Documents\GitHub\Doc_ret.mp4" width="900"/>
+
+---
+
+
 </div>
 
-## ⚙️ How It Works
+---
+
+# 🏗️ Architecture
 
 ```mermaid
 flowchart LR
-    U[👤 User Question] --> A{🧠 LangGraph Agent}
-    A -->|Video already known| R[📄 retrieveTool]
-    A -->|Topic known, source unclear| S[🔎 retrieveSimilarVideosTool]
-    A -->|Not indexed yet| T[🕸️ triggerYoutubeVideoScrapeTool]
-    T --> BD[BrightData Scraper]
-    BD -->|async job| WH[🔗 Webhook Callback]
-    WH --> EMB[Chunk + Embed]
-    EMB --> DB[(🗄️ pgvector / PostgreSQL)]
-    R --> DB
-    S --> DB
-    DB --> ANS[✅ Answer to User]
+
+A[👤 User]
+
+A --> B[💬 Chat Interface]
+
+B --> C[🧠 LangGraph Agent]
+
+C --> D{Knowledge Available?}
+
+D -->|Known Video| E[retrieveTool]
+
+D -->|Similar Topic| F[retrieveSimilarVideosTool]
+
+D -->|Missing Context| G[triggerYoutubeVideoScrapeTool]
+
+G --> H[🌐 BrightData Scraper]
+
+H --> I[📄 Transcript]
+
+I --> J[Webhook Callback]
+
+J --> K[Chunk Documents]
+
+K --> L[Generate Embeddings]
+
+L --> M[(pgvector)]
+
+E --> M
+
+F --> M
+
+M --> N[LLM Response]
+
+N --> O[✅ Final Answer]
 ```
 
-**The key design decision:** scraping a live YouTube transcript with BrightData isn't instant — it's an external job. Instead of blocking the chat while it runs, the agent hands the job off, tells the user it's fetching the source, and resumes the conversation the moment a webhook confirms the transcript has been chunked, embedded, and indexed. Nothing about the UX breaks while the pipeline works in the background.
+---
 
-## 🧰 Agent Tools
+# ⚙️ Workflow
 
-The agent's intelligence isn't in a single giant prompt — it's in a small, well-scoped toolset that maps directly onto the three ways a question can fail:
+1. User submits a question.
+2. LangGraph agent determines which retrieval strategy is appropriate.
+3. Existing transcript is searched if available.
+4. If unavailable, similar videos are searched.
+5. If nothing relevant exists, BrightData scrapes the transcript.
+6. Transcript is chunked and embedded.
+7. Embeddings are stored inside pgvector.
+8. Agent retrieves updated context.
+9. Final response is generated.
 
-| Tool | Job | When it fires |
-|---|---|---|
-| `retrieveTool` | Searches a specific video's transcript | User already knows the video |
-| `retrieveSimilarVideosTool` | Semantic search across every indexed video | User knows the topic, not the source |
-| `triggerYoutubeVideoScrapeTool` | Scrapes a new transcript and indexes it | The corpus is too thin to answer responsibly |
+---
+
+# 🧰 Agent Tools
+
+| Tool | Purpose |
+|------|---------|
+| retrieveTool | Search transcript of a known video |
+| retrieveSimilarVideosTool | Semantic search across indexed videos |
+| triggerYoutubeVideoScrapeTool | Scrape and index new transcripts |
 
 ```ts
 const tools = [
-  retrieveTool,
-  retrieveSimilarVideosTool,
-  triggerYoutubeVideoScrapeTool,
+    retrieveTool,
+    retrieveSimilarVideosTool,
+    triggerYoutubeVideoScrapeTool,
 ];
 
 const agent = createReactAgent({
-  llm: claude,
-  tools,
-  checkpointer: new MemorySaver(),
+    llm: claude,
+    tools,
+    checkpointer: new MemorySaver(),
 });
 ```
 
-## 🏗️ Tech Stack
+---
+
+# 🛠️ Tech Stack
 
 | Layer | Technology |
-|---|---|
-| **Frontend** | React · TypeScript · Vite |
-| **Agent Orchestration** | LangGraph (`createReactAgent`) |
-| **LLM** | Claude |
-| **Web Scraping** | BrightData |
-| **Embeddings & Chunking** | LangChain · `RecursiveCharacterTextSplitter` |
-| **Vector Store** | PostgreSQL + `pgvector` |
-| **Async Pipeline** | Webhook-based scrape → index handoff |
+|------|-------------|
+| Frontend | React + TypeScript + Vite |
+| Backend | Node.js |
+| Agent Framework | LangGraph |
+| LLM | Claude |
+| Scraping | BrightData |
+| Embeddings | LangChain |
+| Vector Database | PostgreSQL + pgvector |
+| Async Communication | Webhooks |
 
-**Chunking strategy:** transcripts are split with a chunk size of `1000` and an overlap of `200` characters — conservative enough to preserve context across chunk boundaries without exploding the index.
+---
 
-```ts
-const splitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 1000,
-  chunkOverlap: 200,
-});
-
-const vectorStore = await PGVectorStore.initialize(embeddings, {
-  postgresConnectionOptions,
-});
-```
-
-## 📁 Project Structure
+# 📂 Project Structure
 
 ```
-Document-Retrieval/
-├── client/                  # React + TypeScript + Vite frontend
-│   ├── public/
-│   │   └── vite.svg
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── App.tsx
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   ├── main.tsx
-│   │   └── vite-env.d.ts
-│   ├── index.html
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── eslint.config.js
-├── server/                  # Agent, tools, retrieval & webhook logic
+Document-Retrieval
+│
+├── client
+│   ├── public
+│   ├── src
+│   └── package.json
+│
+├── server
+│   ├── agents
+│   ├── tools
+│   ├── routes
+│   ├── webhook
+│   └── vectorstore
+│
+├── assets
+│   ├── demo.gif
+│   └── architecture.png
+│
 └── README.md
 ```
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
+# 🚀 Getting Started
 
-- Node.js ≥ 18
-- PostgreSQL with the `pgvector` extension enabled
-- API keys for: Claude (Anthropic), BrightData
-
-### Installation
+## Clone Repository
 
 ```bash
-# Clone the repo
 git clone https://github.com/riyav1606/Document-Retrieval.git
+
 cd Document-Retrieval
+```
 
-# Install frontend dependencies
+---
+
+## Install Dependencies
+
+Frontend
+
+```bash
 cd client
-npm install
 
-# Install backend dependencies
-cd ../server
 npm install
 ```
 
-### Environment Variables
+Backend
 
-Create a `.env` file in `server/` with:
+```bash
+cd server
+
+npm install
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` inside the **server** directory.
 
 ```env
-ANTHROPIC_API_KEY=your_key_here
-BRIGHTDATA_API_KEY=your_key_here
-DATABASE_URL=postgresql://user:password@localhost:5432/document_retrieval
-WEBHOOK_URL=your_public_webhook_url
+ANTHROPIC_API_KEY=your_api_key
+
+BRIGHTDATA_API_KEY=your_api_key
+
+DATABASE_URL=your_postgresql_connection
+
+WEBHOOK_URL=your_webhook_url
 ```
 
-### Run Locally
+> Never commit real API keys.
+
+---
+
+## Run
+
+Backend
 
 ```bash
-# Terminal 1 — backend
 cd server
-npm run dev
 
-# Terminal 2 — frontend
-cd client
 npm run dev
 ```
 
-Then open `http://localhost:5173`.
+Frontend
 
-## 🗺️ Roadmap
+```bash
+cd client
 
-- [ ] Support platforms beyond YouTube (podcasts, blog transcripts)
-- [ ] Streaming responses while a scrape is in progress
-- [ ] Multi-user session isolation
-- [ ] Dockerized deployment
-- [ ] Test coverage for the tool-selection logic
+npm run dev
+```
 
-## 🎓 What This Project Demonstrates
+---
 
-- Designing **stateful, tool-using agents** with LangGraph rather than single-shot prompting
-- Building **async, webhook-driven pipelines** so long-running jobs never block a conversational UX
-- Practical **RAG engineering**: chunking strategy, embeddings, and vector search with pgvector
-- Thinking about AI products as systems with an **acquisition layer**, not just a response layer
+# 📈 Future Improvements
 
-## 📄 License
+- Multi-platform document ingestion
+- Background job queues
+- Streaming responses
+- Authentication
+- Docker deployment
+- Kubernetes support
+- Better reranking pipeline
+- Multi-agent collaboration
 
-Distributed under the MIT License. See `LICENSE` for details.
+---
 
-## 📬 Contact
+# 🎯 What This Project Demonstrates
 
-**Riya** — [GitHub](https://github.com/riyav1606)
+- Building stateful AI agents using LangGraph
+- Practical Retrieval-Augmented Generation
+- Async webhook architecture
+- Vector search with pgvector
+- Semantic retrieval
+- Agent tool orchestration
+- Dynamic knowledge acquisition
+- Production-style AI pipeline design
 
-Project Link: [github.com/riyav1606/Document-Retrieval](https://github.com/riyav1606/Document-Retrieval)
+---
+
+# 👩‍💻 Author
+
+**Riya Vairale**
+
+GitHub: https://github.com/riyav1606
 
 ---
 
 <div align="center">
-<sub>Built to explore what an AI app looks like when it can go find its own evidence.</sub>
+
+### ⭐ If you found this project interesting, consider giving it a star!
+
+Built to explore what AI systems look like when they can **acquire knowledge instead of merely retrieving it.**
+
 </div>
